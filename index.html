@@ -66,6 +66,25 @@
       document.getElementById('btn').disabled = false;
       input.focus();
     }
+    document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const tipo = params.get('tipo');
+  const id = params.get('id');
+
+  let msgInicial = 'Olá! Me diga o ID do negócio para eu analisar.';
+  if (tipo === 'deal' && id) {
+    msgInicial = `Id do negócio: ${id}`;
+    // já manda a mensagem automática para o Vapi
+    document.getElementById('input').value = msgInicial;
+    send(); // chama sua função send() já existente
+  } else {
+    add(msgInicial, 'bot');
+  }
+
+  document.getElementById('input').addEventListener('keypress', e => { if (e.key === 'Enter') send(); });
+});
+
   </script>
 </body>
 </html>
+

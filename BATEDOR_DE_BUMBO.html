@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🥁 Batedor de Bumbo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; display: flex; justify-content: center; padding: 40px; }
+    .chat { width: 400px; }
+    .chat h2 { text-align: center; }
+    #messages { height: 500px; overflow-y: auto; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #1a1a1a; }
+    .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 14px; line-height: 1.4; }
+    .user { background: #2563eb; margin-left: auto; text-align: right; }
+    .bot { background: #333; }
+    .typing { color: #888; font-size: 13px; }
+    .row { display: flex; gap: 8px; }
+    input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 14px; outline: none; }
+    button { padding: 10px 16px; border-radius: 8px; border: none; background: #e63946; color: #fff; cursor: pointer; font-weight: bold; }
+    button:disabled { background: #444; }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <h2>🥁 Batedor de Bumbo</h2>
+    <div id="messages"></div>
+    <div class="row">
+      <input id="input" placeholder="Digite o nome do vendedor..." autocomplete="off" />
+      <button id="btn" onclick="send()">Enviar</button>
+    </div>
+  </div>
+  <script>
+    const API_KEY = '8823b1d7-862c-4b8f-8f18-3ca21caf0a66';
+    const ASSISTANT_ID = 'c456293d-9c2f-429a-88b0-819b6fb2941f';
+    let prevId = null;
+    document.getElementById('input').addEventListener('keypress', e => { if (e.key === 'Enter') send(); });
+    function add(text, cls) {
+      const d = document.createElement('div');
+      d.className = 'msg ' + cls;
+      d.textContent = text;
+      document.getElementById('messages').appendChild(d);
+      document.getElementById('messages').scrollTop = 99999;
+    }
+    async function send() {
+      const input = document.getElementById('input');
+      const text = input.value.trim();
+      if (!text) return;
+      add(text, 'user');
+      input.value = '';
+      document.getElementById('btn').disabled = true;
+      const t = document.createElement('div');
+      t.className = 'typing'; t.id = 'typing'; t.textContent = 'Buscando...';
+      document.getElementById('messages').appendChild(t);
+      const body = { assistantId: ASSISTANT_ID, input: text };
+      if (prevId) body.previousChatId = prevId;
+      try {
+        const res = await fetch('https://api.vapi.ai/chat', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        t.remove();
+        const data = await res.json();
+        prevId = data.id;
+        const msg = data.output?.filter(m => m.role === 'assistant' && m.content)?.pop();
+        add(msg ? msg.content : '(sem resposta)', 'bot');
+      } catch (e) { t.remove(); add('Erro: ' + e.message, 'bot'); }
+      document.getElementById('btn').disabled = false;
+      input.focus();
+    }
+  </script>
+</body>
+</html>
